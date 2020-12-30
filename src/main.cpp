@@ -23,11 +23,11 @@
 
 WifiCredentials credentials; 
 const long initial_timeout_time = 2000;
-State system_state = UNDEFINED;
+State system_state = STATE_UNDEFINED;
 
 void setup() {
     Serial.begin(115200);
-    serialLog("Starting Setup\n", LOG);
+    serialLog("Starting Setup\n", LOGSTATE_LOG);
     Serial.setTimeout(initial_timeout_time);
     // initialisation 
     String incoming = Serial.readString();
@@ -36,34 +36,43 @@ void setup() {
     }
     // Setup Connection
     credentials = getCredentials();
-    serialLog("Connecting to" + String(credentials.ssid) + "\n", LOG);
+    serialLog("Connecting to" + String(credentials.ssid) + "\n", LOGSTATE_LOG);
     WiFi.begin(credentials.ssid, credentials.password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        serialLog("Waiting for Connection\n", LOG);
+        serialLog("Waiting for Connection\n", LOGSTATE_LOG);
     }
-    system_state = WIFI_LISTENING;
-    serialLog("Connected\n", LOG);
+    system_state = STATE_WIFI_LISTENING;
+    serialLog("Connected\n", LOGSTATE_LOG);
     server.begin();
 }
 
 void loop() {
     // put your main code here, to run repeatedly:
     switch(system_state){
-        case UNDEFINED: {
+        case STATE_UNDEFINED: {
             break;
         }
-        case WIFI_LISTENING: {
+        case STATE_WIFI_LISTENING: {
             if(!WiFiStateHandler(&system_state)){
-                system_state = SYSTEM_ERROR;
+                system_state = STATE_SYSTEM_ERROR;
             }
             break;
         }
-        case CREDENTIAL_MANAGEMENT: {
+        case STATE_CREDENTIAL_MANAGEMENT: {
+            credentials = getCredentials();
+            WiFi.begin(credentials.ssid, credentials.password);
+            while (WiFi.status() != WL_CONNECTED) {
+                delay(500);
+                serialLog("Waiting for Connection\n", LOGSTATE_LOG);
+            }
+            system_state = STATE_WIFI_LISTENING;
+            serialLog("Connected\n", LOGSTATE_LOG);
+            server.begin();
             break;
         }
-        case SYSTEM_ERROR: {
-            serialLog("Reset", ERROR);
+        case STATE_SYSTEM_ERROR: {
+            serialLog("Reset", LOGSTATE_ERROR);
             resetFunc();
             break;
         }

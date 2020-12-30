@@ -2,17 +2,17 @@
 #include <Arduino.h>
 
 enum State {
-    UNDEFINED,
-    SERIAL_INIT,
-    CREDENTIAL_MANAGEMENT,
-    WIFI_LISTENING,
-    SYSTEM_ERROR,
+    STATE_UNDEFINED,
+    STATE_SERIAL_INIT,
+    STATE_CREDENTIAL_MANAGEMENT,
+    STATE_WIFI_LISTENING,
+    STATE_SYSTEM_ERROR,
 };
 
 enum LogState {
-    LOG,
-    DEBUG,
-    ERROR
+    LOGSTATE_LOG,
+    LOGSTATE_DEBUG,
+    LOGSTATE_ERROR
 };
 
 struct WifiCredentials {

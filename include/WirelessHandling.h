@@ -30,7 +30,7 @@ bool WiFiStateHandler(State *sys_state){
     rgb = getRGBMem();
     WiFiClient client = server.available();   
     if (client) {                             
-        serialLog("New Client Connected\n", LOG);         
+        serialLog("New Client Connected\n", LOGSTATE_LOG);         
         String incomming_data = "";                
         long current_time = millis();
         long previous_time = current_time;
@@ -40,7 +40,7 @@ bool WiFiStateHandler(State *sys_state){
             current_time = millis();         
             if (client.available()) {             
             char c = client.read();             
-            serialLog("Received Byte: " + String(c), LOG);
+            serialLog("Received Byte: " + String(c), LOGSTATE_LOG);
             header += c;
             if (c == '\n') {     
                 if (incomming_data.length() == 0) {             
@@ -49,19 +49,31 @@ bool WiFiStateHandler(State *sys_state){
                     client.println("Connection: close");
                     client.println();    
                     if (header.indexOf("GET /RGB") >= 0) {
-                        serialLog("GET RGB:" + String(rgb.r) + "," + String(rgb.g) + "," + String(rgb.b) + "\n", LOG);
+                        serialLog("GET RGB:" + String(rgb.r) + "," + String(rgb.g) + "," + String(rgb.b) + "\n", LOGSTATE_LOG);
                     } 
                     else if (header.indexOf("POST /RGB") >= 0) {
+                        // use POST /RGB?255?255?255
                         char delimiter = '?';
                         RGB_S tmp;
                         int delimiter_index = header.indexOf(delimiter);
                         int second_delimiter_index = header.substring(delimiter_index + 1).indexOf(delimiter) + delimiter_index;
                         header.substring(0, delimiter_index).toCharArray(tmp.r, 3);
                         header.substring(delimiter_index + 1, second_delimiter_index).toCharArray(tmp.g, 3);
-                        header.substring(delimiter_index + 1).toCharArray(tmp.b, 3);
+                        header.substring(second_delimiter_index + 1).toCharArray(tmp.b, 3);
                         rgb = rgbToByte(tmp);
                         setRGBMem(rgb);
-                        serialLog("SET RGB:" + String(rgb.r) + "," + String(rgb.g) + "," + String(rgb.b) + "\n", LOG);
+                        serialLog("SET RGB:" + String(rgb.r) + "," + String(rgb.g) + "," + String(rgb.b) + "\n", LOGSTATE_LOG);
+                    }
+                    else if (header.indexOf("POST /CREDENTIALS" >= 0)) {
+                        char delimiter = '?';
+                        WifiCredentials tmp;
+                        int delimiter_index = header.indexOf(delimiter);
+                        int second_delimiter_index = header.substring(delimiter_index + 1).indexOf(delimiter) + delimiter_index;
+                        header.substring(delimiter_index + 1, second_delimiter_index).toCharArray(tmp.ssid, 32);
+                        header.substring(second_delimiter_index + 1).toCharArray(tmp.password, 32);
+                        setCredentials(tmp);
+                        serialLog("SET CREDENTIALS:" + String(tmp.ssid) + "," + String(tmp.password) + "\n", LOGSTATE_LOG);
+                        *sys_state = STATE_CREDENTIAL_MANAGEMENT;
                     }
                     sendHTML(&client);
                     break;
@@ -77,7 +89,7 @@ bool WiFiStateHandler(State *sys_state){
         }
         // Close the connection
         client.stop();
-        serialLog("Client disconnected\n", LOG);
+        serialLog("Client disconnected\n", LOGSTATE_LOG);
     }
     return true;
 }
