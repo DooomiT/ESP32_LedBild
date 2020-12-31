@@ -1,0 +1,50 @@
+@startuml System
+() "Supply Voltage" as SV
+
+rectangle LEDStripe {
+    () 12V
+    () GND
+    () R
+    () G
+    () B
+}
+
+rectangle NodeMcu {
+    () 3_3V
+    () GND
+    rectangle "Digital Pins" as DIP 
+    rectangle "WebServer" as WS {
+
+    }
+    Node Memory [
+        <b> Memory
+        ===
+        RGBData (r/g/b)
+        ---
+        WifiCredentials (ssid/pw)
+    ]
+    DIP -down-> R
+    DIP -down-> G
+    DIP -down-> B
+}
+
+rectangle Router {
+
+}
+
+Node R2W [
+    <Router to Webserver>
+    ===
+    GET RGB Data 
+    (GET RGB)
+    ---
+    POST RGB Data
+    (POST?rrr?ggg?bbb)
+    ---
+    POST Wireless Credentials
+]
+Router -> R2W
+R2W <-> WS
+SV -down-> 12V
+SV -down-> 3_3V
+@enduml
